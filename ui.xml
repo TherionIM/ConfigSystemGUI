@@ -1,0 +1,2090 @@
+﻿<!--xml for ConfigSystem GUI - graphical user interface -->
+<!--
+control params:
+	tab (no name)
+	group	(no name)
+	textbox
+	dropdown
+	file
+	checkbox
+	updown (min/max/decimal/increment)
+<item id="samplePoint" control="updown" label="sample point of discretization:" min="5" max="" decimal="true" increment="">     
+each item needs:
+a)required params 
+	label - text in GUI
+	control
+b)optional params
+	name - keyword in the export file (to read in by ConfigSystem)
+	orientation params:
+		vertical
+		horizontal (default)
+	size (for textbox)
+	value node
+e.g.:	
+each item has:
+<item control="textbox" label="General Input" name="keyword" orientation="vertical">
+<\item>
+available type for values:
+	int
+	double
+	bool
+	string
+
+rule / rules:
+	type:	enable or visible
+	op: equals, notEquals, moreThan, lessThan
+	in the rule block: '<rules> .. </rules>' of the same type it's OR logic (if 1 is true all is true)
+	between ' <rules> .. </rules> ' blocks its AND logic (all of the rules must be true to kick in)
+	the rules of the child always wins over the rules of the parents
+	the rules of the same type (visible/enable) of the inner box has priority and will overwrite the 
+		rules of the overall box  
+		(so, if I need a rule for the overgroup, rewrite the rule in the inner group again to make sure 
+		it will be fulfilled if the same type of rule (visible/enable) is used)
+	the types of the rules (visible/enable) are independent from each other
+	you can have different the 'rule' in the '<rules> ... </rules>' blocks with following logic:
+		<rules> 
+			<rule> //rule-block 1
+				conditions - AND - logic: all conditions have to be fulfilled 
+			</rule> 
+		
+			<rule>	//rule-block 2
+				conditions - AND - logic: all conditions have to be fulfilled 
+			</rule> 
+		</rules> 
+		'rule block 1' OR 'rule block 2' (OR logic between the 'rule'-blocks
+rule: 
+-->
+
+<!--
+<setup title="Builder Input file for XRST" output="input.txt" execute="../make" >
+-->
+<setup title="Builder Input file for XRST" output="configuration_UI.txt" execute="./main.out" about="Kathrin">
+
+<!-- 
+	**************************************************************** 
+			general params
+	**************************************************************** 
+-->     
+	<item control="tab" label="general Input" orientation="vertical">
+		
+		<item control="group" label="discretization" orientation="horizontal">
+		 	<item id="samplePoint" control="textbox" label="sample point of discretization:" size="5">            	            				
+				<value name="N" type="int" default="8192" min="2" max="1048576" />
+            </item>	
+		 	<item id="radius" control="textbox" label="radius / aB:" size="5">     
+	       		<value name="R" type="double" default="100.0" min="10.0" max="1000000.0" />
+            </item>	
+		</item>
+		<item control="group" label="" orientation="vertical">
+		 	<item id="temp" control="textbox" label="temperature / K:" size="10">    
+				<value  name="TEMP" type="double" default="139000.0" min="10.0" max="1.0e15" />
+            </item>	
+		 	<item id="number_of_ions" control="dropdown" label="number of ions:" >     
+		    		<value name="NUMBER_OF_IONS" type="int" default="1" min="1" max="4" />
+        			<entries>
+      			 		<entry value="1" />
+       		    		<entry value="2" />
+      		     		<entry value="3" />            
+      			 		<entry value="4" />
+       				</entries>
+            </item>	
+		</item>
+		<item control="group" label="models rayleigh peak" orientation="horizontal">
+			<item control="group" label="models structure" orientation="vertical">
+			 	<item id="model_sk" control="dropdown" label="model structure:" >  
+					<value name="MODEL_STRUCTURE" type="string"/>
+					<entries>
+						<entry value="HNC" />
+						<!--<entry value="HNC1COMP" />-->
+						<entry value="MSA_OCP" />
+						<entry value="MSA_SCREEN" />
+						<entry value="FILE" />
+					</entries>
+	            </item>	
+ 				<item id="hnc_electrons_considered" control="checkbox" label="INCLUDE_ELECTRON">
+				<rules>
+		       		<rule type="visible">
+		               	<condition param="model_sk" op="equals" value="HNC" />
+ 		           </rule> 
+		       		<rule type="visible">
+		               	<condition param="model_sk" op="equals" value="HNC1COMP" />
+ 		           </rule>            
+   				</rules> 
+					<value name="HNC_INCLUDE_ELECTRON" type="bool" default="true"/>
+				</item> 
+
+ 				<item id="skfile_electrons_considered" control="checkbox" label="INCLUDE_ELECTRON">
+				<rules>
+		       		<rule type="visible">
+		               	<condition param="model_sk" op="equals" value="FILE" />
+ 		           </rule> 
+   				</rules> 
+					<value name="SKFILE_INCLUDE_ELECTRON" type="bool" default="false"/>
+				</item> 
+  
+           	</item>	
+
+<!--*************************** formfactor *************************************************	-->
+			<item control="group" label="set: model form factor" orientation="vertical">
+			 	<item id="model_fk" control="dropdown" label="for all ions:" >  
+					<value name="MODEL_FORMFACTOR" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="NONE" />
+						<entry value="SEPARATE" />
+					</entries>
+    	        </item>	
+			 	<item id="model_fk_1" control="dropdown" label="for ion 1:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_fk" op="equals" value="SEPARATE" />
+		           </rule>            
+   				</rules> 
+					<value  name="MODEL_FORMFACTOR_1" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="NONE" />
+					</entries>
+    	        </item>	
+			 	<item id="model_fk_2" control="dropdown" label="for ion 2:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_fk" op="equals" value="SEPARATE" />
+					   <condition param="number_of_ions" op="moreThan" value="1" />
+		           </rule>            
+   				</rules> 
+					<value name="MODEL_FORMFACTOR_2" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="NONE" />
+					</entries>
+    	        </item>	
+			 	<item id="model_fk_3" control="dropdown" label="for ion 3:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_fk" op="equals" value="SEPARATE" />
+					   <condition param="number_of_ions" op="moreThan" value="2" />
+		           </rule>            
+   				</rules> 
+					<value name="MODEL_FORMFACTOR_3" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="NONE" />
+					</entries>
+    	        </item>	
+			 	<item id="model_fk_4" control="dropdown" label="for ion 4:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_fk" op="equals" value="SEPARATE" />
+					   <condition param="number_of_ions" op="moreThan" value="3" />
+		           </rule>            
+   				</rules> 
+					<value name="MODEL_FORMFACTOR_4" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="NONE" />
+					</entries>
+    	        </item>	
+    	    </item>	
+
+<!--*************************** screening *************************************************	-->
+			<item control="group" label="set: model screening function" orientation="vertical">
+			 	<item id="model_qk" control="dropdown" label="for all ions:" >  
+					<value name="MODEL_SCREENING" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="LINEAR_RESPONSE" />
+						<entry value="NONE" />
+						<entry value="SEPARATE" />
+					</entries>
+	            </item>	
+			 	<item id="model_qk_1" control="dropdown" label="for ion 1:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_qk" op="equals" value="SEPARATE" />
+		           </rule>            
+	   			</rules> 
+					<value name="MODEL_SCREENING_1" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="LINEAR_RESPONSE" />
+						<entry value="NONE" />
+					</entries>
+	            </item>	
+			 	<item id="model_qk_2" control="dropdown" label="for ion 2:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_qk" op="equals" value="SEPARATE" />
+					   <condition param="number_of_ions" op="moreThan" value="1" />
+		           </rule>            
+	   			</rules> 
+					<value name="MODEL_SCREENING_2" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="LINEAR_RESPONSE" />
+						<entry value="NONE" />
+					</entries>
+	            </item>	
+			 	<item id="model_qk_3" control="dropdown" label="for ion 3:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_qk" op="equals" value="SEPARATE" />
+					   <condition param="number_of_ions" op="moreThan" value="2" />
+		           </rule>            
+	   			</rules> 
+					<value name="MODEL_SCREENING_3" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="LINEAR_RESPONSE" />
+						<entry value="NONE" />
+					</entries>
+	            </item>	
+			 	<item id="model_qk_4" control="dropdown" label="for ion 4:" >  
+				<rules>
+		       		<rule type="enable">
+		               <condition param="model_qk" op="equals" value="SEPARATE" />
+					   <condition param="number_of_ions" op="moreThan" value="3" />
+		           </rule>            
+	   			</rules> 
+					<value name="MODEL_SCREENING_4" type="string"/>
+					<entries>
+						<entry value="FILE" />
+						<entry value="LINEAR_RESPONSE" />
+						<entry value="NONE" />
+					</entries>
+	            </item>	
+	
+			</item>
+           </item>	
+
+
+    </item>     
+
+<!-- 
+	**********************************************************  
+				ion parameters 
+	********************************************************** 
+-->     
+
+	<item control="tab" label="ions input" orientation="horizontal">
+		<item control="group" label="Ion 1" orientation="vertical">
+		 	<item id="density_1" control="textbox" label="density / (1/ccm):" size="10">  
+				<value name="DENSITY_1" type="double" default="1.00e23" min="1.0e1" max="1.0e28" />
+            </item>	
+		 	<item id="charge_1" control="textbox" label="ion charge:" size="5">     
+	       		<value name="CHARGE_1" type="double" default="1.0" min="0.0" max="100.0" />
+            </item>	
+		 	<item id="spin_1" control="textbox" label="spin:" size="5">     
+	       		<value name="SPIN_1" type="double" default="0.5" min="0.5" max="5.0" />
+            </item>	
+		 	<item id="mass_1" control="textbox" label="mass:" size="10">     
+	       		<value name="MASS_1" type="double" default="1.6726231e-27" min="1.6726231e-27" max="1.6726231e-20" />
+            </item>	
+		</item>
+		<item control="group" label="Ion 2" orientation="vertical">
+   			<rules>
+	       		<rule type="enable">
+	               <condition param="number_of_ions" op="moreThan" value="1" />
+	           </rule>            
+   			</rules> 
+		 	<item id="density_2" control="textbox" label="density / (1/ccm):" size="10">            	            		
+				<value name="DENSITY_2" type="double" default="1.34e23" min="1.0e1" max="1.0e28" />
+            </item>	
+		 	<item id="charge_2" control="textbox" label="ion charge:" size="5">     
+	       		<value name="CHARGE_2" type="double" default="1.0" min="0.0" max="100.0" />
+            </item>	
+		 	<item id="spin_2" control="textbox" label="spin:" size="5">     
+	       		<value name="SPIN_2" type="double" default="0.5" min="0.5" max="5.0" />
+            </item>	
+		 	<item id="mass_2" control="textbox" label="mass:" size="10">     
+	       		<value name="MASS_2" type="double" default="1.6726231e-27" min="1.6726231e-27" max="1.6726231e-20" />
+            </item>	
+		</item>
+		<item control="group" label="Ion 3" orientation="vertical">
+   			<rules>
+	       		<rule type="enable">
+	               <condition param="number_of_ions" op="moreThan" value="2" />
+	           </rule>            
+   			</rules> 
+		 	<item id="density_3" control="textbox" label="density / (1/ccm):" size="10">      
+				<value name="DENSITY_3" type="double" default="1.34e23" min="1.0e1" max="1.0e28" />
+            </item>	
+		 	<item id="charge_3"  control="textbox" label="ion charge:" size="5">     
+	       		<value name="CHARGE_3" type="double" default="1.0" min="0.0" max="100.0" />
+            </item>	
+		 	<item id="spin_3" control="textbox" label="spin:" size="5">     
+	       		<value name="SPIN_3" type="double" default="0.5" min="0.5" max="5.0" />
+            </item>	
+		 	<item id="mass_3" control="textbox" label="mass:" size="10">     
+	       		<value name="MASS_3" type="double" default="1.6726231e-27" min="1.6726231e-27" max="1.6726231e-20" />
+            </item>	
+		</item>
+		<item control="group" label="Ion 4" orientation="vertical">
+   			<rules>
+	       		<rule type="enable">
+	               <condition param="number_of_ions" op="moreThan" value="3" />
+	           </rule>            
+   			</rules> 
+		 	<item id="density_4" control="textbox" label="density / (1/ccm):" size="10">   
+				<value name="DENSITY_4" type="double" default="1.34e23" min="1.0e1" max="1.0e28" />
+            </item>	
+		 	<item id="charge_4" control="textbox" label="ion charge:" size="5">     
+	       		<value name="CHARGE_4" type="double" default="1.0" min="0.0" max="100.0" />
+            </item>	
+		 	<item id="spin_4" control="textbox" label="spin:" size="5">     
+	       		<value name="SPIN_4" type="double" default="0.5" min="0.5" max="5.0" />
+            </item>	
+		 	<item id="mass_4" control="textbox" label="mass:" size="10">     
+	       		<value name="MASS_4" type="double" default="1.6726231e-27" min="1.6726231e-27" max="1.6726231e-20" />
+            </item>	
+		</item>
+    </item>     <!-- end of tab: ion input -->
+
+
+<!-- 
+	*********************************************************  
+				HNC 
+	*********************************************************	
+-->
+	<item control="tab" label="HNC input" orientation="vertical">
+	<rules>
+		<rule type="enable">
+			<condition param="model_sk" op="equals" value="HNC" />
+        </rule>            
+	</rules>
+		<item control="group" label="HNC" orientation="horizontal">
+		 	<item id="hnc_pot" control="dropdown" label="hnc potential:">  
+				<value name="HNC_POTENTIAL" type="string"/>
+				<entries>
+					<entry value="COULOMB" />
+					<entry value="DEBYE" />
+					<entry value="DEBYE+SRR" />
+					<entry value="DEUTSCH" />
+					<entry value="KELBG" />
+					<entry value="KK" />
+					<entry value="SEPARATE" />
+				</entries>
+            </item>
+
+		 	<item id="srr_sigma" control="textbox" label="SRR sigma / aB:" size="5" >  
+			<rules>
+		   		<rule type="visible">
+			       <condition param="hnc_pot" op="equals" value="DEBYE+SRR" orientation="horizontal"/>
+			   </rule>            
+			</rules> 
+				<value name="SRR_SIGMA" type="double" default="1.0" min="0.0" max="100.0"/>
+			</item>	
+		</item>
+
+		<!-- 1 ion species -->
+		<item control="group" label="1 ion species" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="1" />
+			    </rule>            				
+			</rules>
+			<item control="group" label="e-e potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_00" control="dropdown" label="HNC potential_ee:" >
+					<value  name="HNC_POTENTIAL_00" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+			    </item>	
+			</item>
+			<item control="group" label="e-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_01" control="dropdown" label="HNC potential_e1:" >  
+					<value  name="HNC_POTENTIAL_01" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+			<item control="group" label="i-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+					</rule> 
+				</rules>
+			 	<item id="hnc_pot_11" control="dropdown" label="HNC potential_11:" >  
+					<value  name="HNC_POTENTIAL_11" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>
+		</item>
+		<!-- end 1 ion species -->
+
+		<!-- 2 ion species -->
+		<item control="group" label="2 ion species" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="2" />
+			    </rule>            				
+			</rules>
+			<item control="group" label="e-e potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_00" control="dropdown" label="HNC potential_ee:" >  
+					<value  name="HNC_POTENTIAL_00" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>
+			<item control="group" label="e-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_01" control="dropdown" label="HNC potential_w1:" >  
+					<value  name="HNC_POTENTIAL_01" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_02" control="dropdown" label="HNC potential_02:" >  
+					<value  name="HNC_POTENTIAL_02" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+			<item control="group" label="i-i potential" orientation="vertical"> 
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+					</rule> 
+				</rules>
+			 	<item id="hnc_pot_11" control="dropdown" label="HNC potential_11:" >  
+					<value  name="HNC_POTENTIAL_11" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_12" control="dropdown" label="HNC potential_12:" >  
+					<value  name="HNC_POTENTIAL_12" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_22" control="dropdown" label="HNC potential_22:" >  
+					<value  name="HNC_POTENTIAL_22" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+		</item>
+		<!-- end 2 ion species -->
+
+		<!-- 3 ion species -->
+		<item control="group" label="3 ion species" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="3" />
+			    </rule>            				
+			</rules>
+			<item control="group" label="e-e potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_00" control="dropdown" label="HNC potential_ee:" >  
+				<value  name="HNC_POTENTIAL_00" type="string"/>
+				<entries>
+					<entry value="COULOMB" />
+					<entry value="DEBYE" />
+					<entry value="DEBYE+SRR" />
+					<entry value="DEUTSCH" />
+					<entry value="KELBG" />
+					<entry value="KK" />
+				</entries>
+				</item>	
+			</item>
+			<item control="group" label="e-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_01" control="dropdown" label="HNC potential_e1:" >  
+					<value  name="HNC_POTENTIAL_01" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_02" control="dropdown" label="HNC potential_e2:" >  
+					<value  name="HNC_POTENTIAL_02" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_03" control="dropdown" label="HNC potential_e3:" >  
+					<value  name="HNC_POTENTIAL_03" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+			<item control="group" label="i-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+					</rule> 
+				</rules>
+			 	<item id="hnc_pot_11" control="dropdown" label="HNC potential_11:" >  
+					<value  name="HNC_POTENTIAL_11" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_12" control="dropdown" label="HNC potential_12:" >  
+					<value  name="HNC_POTENTIAL_12" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_13" control="dropdown" label="HNC potential_13:" >  
+					<value  name="HNC_POTENTIAL_13" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_22" control="dropdown" label="HNC potential_22:" >  
+					<value  name="HNC_POTENTIAL_22" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_23" control="dropdown" label="HNC potential_23:" >  
+					<value  name="HNC_POTENTIAL_23" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_33" control="dropdown" label="HNC potential_33:" >  
+					<value  name="HNC_POTENTIAL_33" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+		</item>
+		<!-- end 3 ion species -->
+
+		<!-- 4 ion species -->
+		<item control="group" label="4 ion species" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="4" />
+			    </rule>            				
+			</rules>
+			<item control="group" label="e-e potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_00" control="dropdown" label="HNC potential_ee:" >  
+					<value  name="HNC_POTENTIAL_00" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>
+			<item control="group" label="e-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+						<condition param="hnc_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+			 	<item id="hnc_pot_01" control="dropdown" label="HNC potential_e1:" >  
+					<value  name="HNC_POTENTIAL_01" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_02" control="dropdown" label="HNC potential_e2:" >  
+					<value  name="HNC_POTENTIAL_02" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_03" control="dropdown" label="HNC potential_e3:" >  
+					<value  name="HNC_POTENTIAL_03" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_04" control="dropdown" label="HNC potential_e4:" >  
+					<value  name="HNC_POTENTIAL_04" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+			<item control="group" label="i-i potential" orientation="vertical">
+				<rules>
+					<rule type="enable">
+						<condition param="hnc_pot" op="equals" value="SEPARATE" />
+					</rule> 
+				</rules>
+			 	<item id="hnc_pot_11" control="dropdown" label="HNC potential_11:" >  
+					<value  name="HNC_POTENTIAL_11" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_12" control="dropdown" label="HNC potential_12:" >  
+					<value  name="HNC_POTENTIAL_12" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_13" control="dropdown" label="HNC potential_13:" >  
+					<value  name="HNC_POTENTIAL_13" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_14" control="dropdown" label="HNC potential_14:" >  
+					<value  name="HNC_POTENTIAL_14" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_22" control="dropdown" label="HNC potential_22:" >  
+					<value  name="HNC_POTENTIAL_22" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_23" control="dropdown" label="HNC potential_23:" >  
+					<value  name="HNC_POTENTIAL_23" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_24" control="dropdown" label="HNC potential_24:" >  
+					<value  name="HNC_POTENTIAL_24" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_33" control="dropdown" label="HNC potential_33:" >  
+					<value  name="HNC_POTENTIAL_33" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			 	<item id="hnc_pot_34" control="dropdown" label="HNC potential_34:" >  
+					<value  name="HNC_POTENTIAL_34" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+				 <item id="hnc_pot_44" control="dropdown" label="HNC potential_44:" >  
+					<value  name="HNC_POTENTIAL_44" type="string"/>
+					<entries>
+						<entry value="COULOMB" />
+						<entry value="DEBYE" />
+						<entry value="DEBYE+SRR" />
+						<entry value="DEUTSCH" />
+						<entry value="KELBG" />
+						<entry value="KK" />
+					</entries>
+				</item>	
+			</item>	
+		</item>
+		<!-- end 4 ion species -->
+
+	</item> 	<!-- end:  HNC 				-->
+
+<!--	
+	***********************************************	
+				file inputs 
+	***********************************************
+-->
+	<item control="tab" label="file inputs" orientation="vertical">
+
+<!-- ********************	formfactor 	*************************************** -->
+		<item control="group" label="form factor" orientation="vertical">
+		
+			<rules>
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="FILE" />
+			    </rule>      
+				<rule type="visible">
+					<condition param="model_qk" op="equals" value="SEPARATE" />
+			    </rule>            				
+			</rules>
+
+		<!-- formfactor 1		-->
+		<item control="group" label="form factor 1" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="0" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="SEPARATE" />
+					<condition param="model_fk_1" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="0" />
+			    </rule>   
+			</rules>
+				<item id="fk_filename_1" control="file" label="filename fk_1:" size="10">   
+					<value name="FK_FILENAME_1" type="string" />
+			   	</item>	
+				<item id="fk_unit_xvalue_1" control="dropdown" label="unit k:" >   
+					<value name="FK_UNIT_XVALUE_1" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="fk_column_xvalue_1" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_XVALUE_1" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="fk_column_yvalue_1" control="updown" label="column fk:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_YVALUE_1" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+		   	</item>	<!-- end form factor 1 -->
+
+		<!-- formfactor 2		-->
+			<item control="group" label="form factor 2" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="1" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="SEPARATE" />
+					<condition param="model_fk_2" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="1" />
+			    </rule>            				
+			</rules>
+				<item id="fk_filename_2" control="file" label="filename fk_2:" size="10">   
+					<value name="FK_FILENAME_2" type="string" />
+		       	</item>	
+				<item id="fk_unit_xvalue_2" control="dropdown" label="unit k:" >   
+					<value name="FK_UNIT_XVALUE_2" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="fk_column_xvalue_2" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_XVALUE_2" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="fk_column_yvalue_2" control="updown" label="column fk:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_YVALUE_2" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+		   	</item>	<!-- end form factor 2 -->
+
+		<!-- formfactor 3		-->
+			<item control="group" label="form factor 3" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="2" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="SEPARATE" />
+					<condition param="model_fk_3" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="2" />
+			    </rule>            				
+			</rules>
+				<item id="fk_filename_3" control="file" label="filename fk_3:" size="10">   
+					<value name="FK_FILENAME_3" type="string" />
+			   	</item>	
+				<item id="fk_unit_xvalue_3" control="dropdown" label="unit k:" >   
+					<value name="FK_UNIT_XVALUE_3" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="fk_column_xvalue_3" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_XVALUE_3" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="fk_column_yvalue_3" control="updown" label="column fk:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_YVALUE_3" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+		   	</item>	<!-- end form factor 3-->
+
+		<!-- formfactor 4		-->
+			<item control="group" label="form factor 4" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="3" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_fk" op="equals" value="SEPARATE" />
+					<condition param="model_fk_4" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="3" />
+			    </rule>            				
+			</rules>
+				<item id="fk_filename_4" control="file" label="filename fk_4:" size="10">   
+					<value name="FK_FILENAME_4" type="string" />
+			   	</item>	
+				<item id="fk_unit_xvalue_4" control="dropdown" label="unit k:" >   
+					<value name="FK_UNIT_XVALUE_3" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="fk_column_xvalue_4" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_XVALUE_4" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="fk_column_yvalue_4" control="updown" label="column fk:" min="1" max="50" increment="1" >   
+					<value name="FK_COLUMN_YVALUE_4" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>	<!-- end form factor 4-->
+		</item> <!-- end form factor general -->
+
+	<!-- ********************	screening function 	*************************************** -->
+		<item control="group" label="model screening" orientation="vertical">
+		
+			<rules>
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="FILE" />
+			    </rule>      
+				<rule type="visible">
+					<condition param="model_qk" op="equals" value="SEPARATE" />
+			    </rule>            				
+			</rules>
+
+		<!-- screening 1		-->
+		<item control="group" label="screening 1" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="0" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="SEPARATE" />
+					<condition param="model_qk_1" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="0" />
+			    </rule>            				
+			</rules>
+				<item id="qk_filename_1" control="file" label="filename qk_1:" size="10">   
+					<value name="QK_FILENAME_1" type="string" />
+			   	</item>	
+				<item id="qk_unit_xvalue_1" control="dropdown" label="unit k:" >   
+					<value name="QK_UNIT_XVALUE_1" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="qk_column_xvalue_1" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_XVALUE_1" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="qk_column_yvalue_1" control="updown" label="column qk:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_YVALUE_1" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+		   	</item>	<!-- end screening 1 -->
+
+		<!-- screening 2		-->
+			<item control="group" label="screening 2" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="1" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="SEPARATE" />
+					<condition param="model_qk_2" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="1" />
+			    </rule>            				
+			</rules>
+				<item id="qk_filename_2" control="file" label="filename qk_2:" size="10">   
+					<value name="QK_FILENAME_2" type="string" />
+		       	</item>	
+				<item id="qk_unit_xvalue_2" control="dropdown" label="unit k:" >   
+					<value name="QK_UNIT_XVALUE_2" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="qk_column_xvalue_2" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_XVALUE_2" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="qk_column_yvalue_2" control="updown" label="column qk:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_YVALUE_2" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+		   	</item>	<!-- end screening 2 -->
+
+		<!-- screening 3		-->
+			<item control="group" label="screening 3" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="2" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="SEPARATE" />
+					<condition param="model_qk_3" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="2" />
+			    </rule>            				
+			</rules>
+				<item id="qk_filename_3" control="file" label="filename qk_3:" size="10">   
+					<value name="QK_FILENAME_3" type="string" />
+			   	</item>	
+				<item id="qk_unit_xvalue_3" control="dropdown" label="unit k:" >   
+					<value name="QK_UNIT_XVALUE_3" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="qk_column_xvalue_3" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_XVALUE_3" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="qk_column_yvalue_3" control="updown" label="column qk:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_YVALUE_3" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+		   	</item>	<!-- end screening 3-->
+
+		<!-- screening 4		-->
+			<item control="group" label="screening 4" orientation="horizontal">
+			<rules>
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="3" />
+			    </rule>            				
+				<rule type="visible">
+			        <condition param="model_qk" op="equals" value="SEPARATE" />
+					<condition param="model_qk_4" op="equals" value="FILE" />
+					<condition param="number_of_ions" op="moreThan" value="3" />
+			    </rule>            				
+			</rules>
+				<item id="qk_filename_4" control="file" label="filename qk_4:" size="10">   
+					<value name="QK_FILENAME_4" type="string" />
+			   	</item>	
+				<item id="qk_unit_xvalue_4" control="dropdown" label="unit k:" >   
+					<value name="QK_UNIT_XVALUE_3" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="qk_column_xvalue_4" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_XVALUE_4" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="qk_column_yvalue_4" control="updown" label="column qk:" min="1" max="50" increment="1" >   
+					<value name="QK_COLUMN_YVALUE_4" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>	<!-- end screening function 4-->
+		</item> <!-- end screening function  general -->
+
+<!-- ********************	structure factor 	*************************************** -->
+		<item control="group" label="structure factor" orientation="vertical">
+		<rules>
+				<rule type="enable">
+			        <condition param="model_sk" op="equals" value="FILE" />
+			    </rule>      
+			</rules>
+			
+		<!-- 1 ion species -->
+		<item control="group" label="1 ion species" orientation="vertical">		
+			<rules>
+				<rule type="enable">
+					<condition param="number_of_ions" op="equals" value="1" />
+					<condition param="model_sk" op="equals" value="FILE" />
+			    </rule>            				
+			</rules>
+			<item control="group" label="e-e" orientation="horizontal">
+				<rules>
+					<rule type="enable" >
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_ee" control="file" label="filename S_ee(k):" size="10">   
+					<value name="SK_FILENAME_00" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_00" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_00" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_00" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_00" control="updown" label="column S_ee(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-e -->
+			<item control="group" label="e-i" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+				<item id="sk_filename_e1" control="file" label="filename S_e1(k):" size="10">   
+					<value name="SK_FILENAME_01" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_01" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_01" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_01" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_01" control="updown" label="column S_e1(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-e -->
+			<item control="group" label="ion 1 - ion 1" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+				        <condition param="model_sk" op="equals" value="FILE" />
+				        <condition param="number_of_ions" op="equals" value="1" />
+				    </rule>      
+				</rules>
+
+				<item id="sk_filename_11" control="file" label="filename S_11(k):" size="10">   
+					<value name="SK_FILENAME_11" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_11" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_11" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_11" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_11" control="updown" label="column S_11(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-e -->
+
+		</item>			<!-- end 1 ion species -->
+
+		<!-- 2 ion species -->
+		<item control="group" label="2 ion species" orientation="vertical">		
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="2" />
+					<condition param="model_sk" op="equals" value="FILE" />
+			    </rule>            				
+			</rules>
+			<!-- electron - electron -->
+			<item control="group" label="electron - electron" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+				<item id="sk_filename_ee" control="file" label="filename S_ee(k):" size="10">   
+					<value name="SK_FILENAME_00" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_00" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_00" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_00" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_00" control="updown" label="column S_ee(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-e -->
+			<!-- electron - ion 1 -->
+			<item control="group" label="electron - ion 1" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e1" control="file" label="filename S_e1(k):" size="10">   
+					<value name="SK_FILENAME_01" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_01" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_01" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_01" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_01" control="updown" label="column S_e1(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>		<!-- end e-ion 1 -->
+			<!-- electron - ion 2 -->			
+			<item control="group" label="electron - ion 2" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e2" control="file" label="filename S_e2(k):" size="10">   
+					<value name="SK_FILENAME_02" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_02" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_02" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_02" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_02" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_02" control="updown" label="column S_e2(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_02" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-i2 -->
+			<!-- ion1 - ion 1 -->	
+			<item control="group" label="ion 1 - ion 1" orientation="horizontal">
+		  	<rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="2" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_11" control="file" label="filename S_11(k):" size="10">   
+					<value name="SK_FILENAME_11" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_11" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_11" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_11" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_11" control="updown" label="column S_11(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i1 -->
+			<!-- ion1 - ion 2 -->			
+			<item control="group" label="ion 1 - ion 2" orientation="horizontal">
+		  	<rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="2" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_12" control="file" label="filename S_12(k):" size="10">   
+					<value name="SK_FILENAME_12" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_12" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_12" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_12" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_12" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_12" control="updown" label="column S_12(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_12" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i2 -->
+			<!-- ion2 - ion 2 -->			
+			<item control="group" label="ion 2 - ion 2" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="2" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_22" control="file" label="filename S_22(k):" size="10">   
+					<value name="SK_FILENAME_22" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_22" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_22" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_22" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_22" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_22" control="updown" label="column S_22(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_22" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i2-i2 -->
+		</item>			<!-- end 2 ion species -->
+
+
+
+	
+
+		<!-- 3 ion species -->
+		<item control="group" label="3 ion species" orientation="vertical">
+		
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="3" />
+					<condition param="model_sk" op="equals" value="FILE" />
+			    </rule>            				
+			</rules>
+			<!-- electron - electron -->
+			<item control="group" label="electron - electron" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_ee" control="file" label="filename S_ee(k):" size="10">   
+					<value name="SK_FILENAME_00" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_00" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_00" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_00" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_00" control="updown" label="column S_ee(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-e -->
+			<!-- electron - ion 1 -->
+			<item control="group" label="electron - ion 1" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e1" control="file" label="filename S_e1(k):" size="10">   
+					<value name="SK_FILENAME_01" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_01" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_01" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_01" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_01" control="updown" label="column S_e1(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>		<!-- end e-ion 1 -->
+			<!-- electron - ion 2 -->			
+			<item control="group" label="electron - ion 2" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e2" control="file" label="filename S_e2(k):" size="10">   
+					<value name="SK_FILENAME_02" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_02" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_02" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_02" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_02" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_02" control="updown" label="column S_e2(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_02" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-i2 -->
+			<!-- electron - ion 3 -->			
+			<item control="group" label="electron - ion 3" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />
+					</rule>            
+				</rules>
+				<item id="sk_filename_e3" control="file" label="filename S_e3(k):" size="10">   
+					<value name="SK_FILENAME_03" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_03" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_03" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_03" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_03" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_03" control="updown" label="column S_e3(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_03" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-i3 -->
+			<!-- ion1 - ion 1 -->	
+			<item control="group" label="ion 1 - ion 1" orientation="horizontal">
+		  	<rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="3" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_11" control="file" label="filename S_11(k):" size="10">   
+					<value name="SK_FILENAME_11" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_11" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_11" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_11" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_11" control="updown" label="column S_11(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i1 -->
+			<!-- ion1 - ion 2 -->			
+			<item control="group" label="ion 1 - ion 2" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="3" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_12" control="file" label="filename S_12(k):" size="10">   
+					<value name="SK_FILENAME_12" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_12" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_12" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_12" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_12" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_12" control="updown" label="column S_12(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_12" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i2 -->
+			<!-- ion1 - ion 3 -->			
+			<item control="group" label="ion 1 - ion 3" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="3" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_13" control="file" label="filename S_13(k):" size="10">   
+					<value name="SK_FILENAME_13" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_13" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_13" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_13" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_13" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_13" control="updown" label="column S_13(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_13" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i3 -->
+			<!-- ion2 - ion 2 -->			
+			<item control="group" label="ion 2 - ion 2" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="3" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_22" control="file" label="filename S_22(k):" size="10">   
+					<value name="SK_FILENAME_22" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_22" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_22" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_22" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_22" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_22" control="updown" label="column S_22(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_22" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i2-i2 -->
+			<!-- ion2 - ion 3 -->			
+			<item control="group" label="ion 2 - ion 3" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="3" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_23" control="file" label="filename S_23(k):" size="10">   
+					<value name="SK_FILENAME_23" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_23" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_23" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_23" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_23" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_23" control="updown" label="column S_23(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_23" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i2-i3 -->
+			<!-- ion3 - ion 3 -->			
+			<item control="group" label="ion 3 - ion 3" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="3" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_33" control="file" label="filename S_33(k):" size="10">   
+					<value name="SK_FILENAME_33" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_33" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_33" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_33" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_33" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_33" control="updown" label="column S_33(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_33" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i3-i3 -->
+
+		</item>			<!-- end 3 ion species -->	
+	
+	
+
+		<!-- 4 ion species -->
+		<item control="group" label="4 ion species" orientation="vertical">
+		
+			<rules>
+				<rule type="visible">
+					<condition param="number_of_ions" op="equals" value="4" />
+					<condition param="model_sk" op="equals" value="FILE" />
+			    </rule>            				
+			</rules>
+			<!-- electron - electron -->
+			<item control="group" label="electron - electron" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_ee" control="file" label="filename S_ee(k):" size="10">   
+					<value name="SK_FILENAME_00" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_00" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_00" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_00" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_00" control="updown" label="column S_ee(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_00" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-e -->
+			<!-- electron - ion 1 -->
+			<item control="group" label="electron - ion 1" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e1" control="file" label="filename S_e1(k):" size="10">   
+					<value name="SK_FILENAME_01" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_01" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_01" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_01" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_01" control="updown" label="column S_e1(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_01" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>		<!-- end e-ion 1 -->
+			<!-- electron - ion 2 -->			
+			<item control="group" label="electron - ion 2" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e2" control="file" label="filename S_e2(k):" size="10">   
+					<value name="SK_FILENAME_02" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_02" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_02" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_02" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_02" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_02" control="updown" label="column S_e2(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_02" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-i2 -->
+			<!-- electron - ion 3 -->			
+			<item control="group" label="electron - ion 3" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e3" control="file" label="filename S_e3(k):" size="10">   
+					<value name="SK_FILENAME_03" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_03" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_03" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_03" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_03" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_03" control="updown" label="column S_e3(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_03" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-i3 -->
+			<!-- electron - ion 4 -->			
+			<item control="group" label="electron - ion 4" orientation="horizontal">
+				<rules>
+					<rule type="enable">
+						<condition param="skfile_electrons_considered" op="equals" value="true" />						
+					</rule>            
+				</rules>
+				<item id="sk_filename_e4" control="file" label="filename S_e4(k):" size="10">   
+					<value name="SK_FILENAME_04" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_04" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_04" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_04" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_04" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_04" control="updown" label="column S_e4(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_04" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end e-i4 -->
+
+			<!-- ion1 - ion 1 -->	
+			<item control="group" label="ion 1 - ion 1" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_11" control="file" label="filename S_11(k):" size="10">   
+					<value name="SK_FILENAME_11" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_11" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_11" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_11" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_11" control="updown" label="column S_11(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_11" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i1 -->
+			<!-- ion1 - ion 2 -->			
+			<item control="group" label="ion 1 - ion 2" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_12" control="file" label="filename S_12(k):" size="10">   
+					<value name="SK_FILENAME_12" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_12" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_12" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_12" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_12" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_12" control="updown" label="column S_12(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_12" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i2 -->
+			<!-- ion1 - ion 3 -->			
+			<item control="group" label="ion 1 - ion 3" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_13" control="file" label="filename S_13(k):" size="10">   
+					<value name="SK_FILENAME_13" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_13" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_13" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_13" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_13" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_13" control="updown" label="column S_13(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_13" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i3 -->
+			<!-- ion1 - ion 4 -->			
+			<item control="group" label="ion 1 - ion 4" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_14" control="file" label="filename S_14(k):" size="10">   
+					<value name="SK_FILENAME_14" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_14" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_14" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_14" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_14" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_14" control="updown" label="column S_14(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_14" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i1-i4 -->
+
+			<!-- ion2 - ion 2 -->			
+			<item control="group" label="ion 2 - ion 2" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_22" control="file" label="filename S_22(k):" size="10">   
+					<value name="SK_FILENAME_22" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_22" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_22" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_22" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_22" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_22" control="updown" label="column S_22(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_22" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i2-i2 -->
+			<!-- ion2 - ion 3 -->			
+			<item control="group" label="ion 2 - ion 3" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_23" control="file" label="filename S_23(k):" size="10">   
+					<value name="SK_FILENAME_23" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_23" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_23" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_23" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_23" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_23" control="updown" label="column S_23(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_23" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i2-i3 -->
+			<!-- ion2 - ion 4 -->			
+			<item control="group" label="ion 2 - ion 4" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_24" control="file" label="filename S_24(k):" size="10">   
+					<value name="SK_FILENAME_24" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_24" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_24" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_24" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_24" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_24" control="updown" label="column S_24(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_24" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i2-i4 -->
+
+			<!-- ion3 - ion 3 -->			
+			<item control="group" label="ion 3 - ion 3" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_33" control="file" label="filename S_33(k):" size="10">   
+					<value name="SK_FILENAME_33" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_33" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_33" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_33" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_33" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_33" control="updown" label="column S_33(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_33" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i3-i3 -->
+			<!-- ion3 - ion 4 -->			
+			<item control="group" label="ion 3 - ion 4" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_34" control="file" label="filename S_34(k):" size="10">   
+					<value name="SK_FILENAME_34" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_34" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_34" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_34" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_34" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_34" control="updown" label="column S_34(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_34" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i3-i4 -->
+			<!-- ion4 - ion 4 -->			
+			<item control="group" label="ion 4 - ion 4" orientation="horizontal">
+			  <rules>
+			  	<rule type="enable">
+			          <condition param="model_sk" op="equals" value="FILE" />
+			          <condition param="number_of_ions" op="equals" value="4" />
+			     </rule>      
+			  </rules>
+				<item id="sk_filename_44" control="file" label="filename S_44(k):" size="10">   
+					<value name="SK_FILENAME_44" type="string" />
+			   	</item>	
+				<item id="sk_unit_xvalue_44" control="dropdown" label="unit k:" >   
+					<value name="SK_UNIT_XVALUE_44" type="string" />
+					<entries>
+						<entry value="A" />
+						<entry value="aB" />
+					</entries>
+			   	</item>	
+				<item id="sk_column_xvalue_44" control="updown" label="column k:" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_XVALUE_44" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+				<item id="sk_column_yvalue_44" control="updown" label="column S_44(k):" min="1" max="50" increment="1" >   
+					<value name="SK_COLUMN_YVALUE_44" type="int" default="1" min="1" max="50" increment="1"/>
+			   	</item>	
+			</item>			<!-- end i4-i4 -->
+
+		</item>			<!-- end structure factor -->
+
+
+
+	</item>
+
+
+
+
+	</item> <!-- end file input tab -->
+
+
+	<runtime_rules>
+	<!-- between different <rule> ... </rule>  -->
+		<rule msg="invalid configuration">
+		<!--here: 'and' operation is working -->
+			<condition param="hnc_pot_00" op="equals" value="COULOMB" />
+			<condition param="hnc_pot_01" op="equals" value="KK" />
+			<condition param="hnc_pot_11" op="equals" value="COULOMB" />
+		</rule>
+
+
+<!--<rule msg="invalid configuration 2" >
+<condition param="model_sk" op="equals" value="HNC" />
+</rule>-->
+</runtime_rules>
+
+
+</setup>

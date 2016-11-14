@@ -1,0 +1,54 @@
+<setup title="Config System UI Demo" output="configuration.txt" execute="demoproject.exe" about="This is the configuration UI for demo Project!">
+	<item control="tab" label="Tab 1" orientation="vertical">
+		<item id="group1" control="group" label="This is a Group" >
+			<item id="textbox1" control="textbox" label="This is a TextBox:" size="10">            	            				
+				<value name="textbox1Value" type="int" default="0" min="0" max="1048576" />
+			</item>	
+			<item id="dropdown1" control="dropdown" label="This is a DropDown:" >     
+				<value name="dropdown1Value" type="string" default="Third" />
+				<entries>
+					<entry value="First" />
+					<entry value="Second" />
+					<entry value="Third" />            
+					<entry value="Fourth" />
+				</entries>
+			</item>			
+		</item>			
+		<item id="group2" control="group" label="This is another Group" orientation="vertical">
+			<item id="checkbox1" control="checkbox" label="This is a CheckBox (Check this to see what more)" >            	            				
+				<value name="checkbox1Value" type="bool" default="false" />
+			</item>	
+			<item id="group3" control="group" label="This is a Group too" >
+				<rules>
+					<rule type="visible">
+						<condition param="checkbox1" op="equals" value="true" />
+					</rule>  					
+				</rules>
+				<item id="checkbox2" control="checkbox" label="Enable" >            	            				
+					<value name="checkbox2Value" type="bool" default="false" />
+				</item>
+				<item id="textbox2" control="textbox" label="This is a TextBox also:" size="10">            	            				
+					<rules>
+						<rule type="enable">
+							<condition param="checkbox2" op="equals" value="true" />
+						</rule>  					
+					</rules>
+					<value name="textbox2Value" type="in" default="0" min="0" max="1048576" />
+				</item>
+			</item>
+		</item>
+	</item>	
+	<item control="tab" label="Tab 2" >
+		<item id="group4" control="group" label="This is a Group" orientation="vertical">
+			<item id="updown1" control="updown" label="This is an updown:" min="1" max="50" increment="1" >   
+				<value name="updown1Value" type="int" default="1" min="1" max="50" />
+			</item>
+			<item id="file1" control="file" label="This is a File:" size="10">   
+				<value name="file1Value" type="string" />
+			</item>	
+		</item>	
+	</item>
+	<item control="tab" label="Tab 3" orientation="vertical">
+	
+	</item>
+</setup>

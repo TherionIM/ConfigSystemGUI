@@ -1,0 +1,5 @@
+textbox1Value 0
+dropdown1Value Third
+checkbox1Value false
+updown1Value 1
+file1Value C:\Users\Therion\workspace\ConfigSystemGUI\ui.xml
