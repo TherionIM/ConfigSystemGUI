@@ -56,9 +56,9 @@ rule:
 -->
 
 <!--
-<setup title="Builder Input file for XRST" output="input.txt" execute="../make" >
+<setup title="Builder Input file" output="input.txt" execute="../make" >
 -->
-<setup title="Builder Input file for XRST" output="configuration_UI.txt" execute="./main.out" about="Kathrin">
+<setup title="Builder Input file" output="configuration_UI.txt" execute="./main.out" about="Demo GUI application">
 
 <!-- 
 	**************************************************************** 
